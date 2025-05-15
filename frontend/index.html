@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date & Time Fetcher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font - Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Additional styles for a slightly nicer look */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            padding: 1rem;
+        }
+        .content-box {
+            background-color: white;
+            padding: 2rem 3rem; /* Increased padding */
+            border-radius: 0.75rem; /* Slightly larger border radius */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            width: 100%;
+            max-width: 500px; /* Max width for the content box */
+        }
+        .title {
+            font-size: 2rem; /* Larger title */
+            font-weight: 600;
+            color: #1e293b; /* Darker text color */
+            margin-bottom: 1.5rem;
+        }
+        .button {
+            background-color: #3b82f6; /* Blue button */
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem; /* Larger button padding */
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem; /* Spacing above button */
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5); /* Button shadow */
+        }
+        .button:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+        }
+        .button:active {
+            transform: translateY(1px); /* Slight press effect */
+        }
+        .time-display {
+            margin-top: 2rem; /* Increased margin */
+            font-size: 1.25rem; /* Larger time display */
+            color: #334155; /* Medium-dark text color */
+            background-color: #f9fafb; /* Very light gray background for the time */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb; /* Light border */
+            min-height: 50px; /* Ensure it has some height even when empty */
+        }
+        .error-message {
+            color: #ef4444; /* Red color for errors */
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        /* Add Inter font from Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container">
+        <div class="content-box">
+            <h1 class="title">Server Time Checker</h1>
+            <p class="text-gray-600 mb-6">Click the button below to fetch the current date and time from the Python server.</p>
+
+            <button id="fetchTimeBtn" class="button">
+                Get Server Time
+            </button>
+
+            <div id="timeResult" class="time-display">
+                Awaiting server response...
+            </div>
+            <div id="errorMessage" class="error-message">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to the button and the result/error divs
+        const fetchTimeBtn = document.getElementById('fetchTimeBtn');
+        const timeResultDiv = document.getElementById('timeResult');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        // Add an event listener to the button for the 'click' event
+        fetchTimeBtn.addEventListener('click', async () => {
+            // Clear previous results and errors
+            timeResultDiv.textContent = 'Fetching time...';
+            errorMessageDiv.textContent = '';
+
+            try {
+                // URL of your Python backend API endpoint
+                // This assumes your Python Flask server is running on http://localhost:5000
+                const response = await fetch('http://localhost:5000/api/time');
+
+                // Check if the HTTP response status is OK (200-299)
+                if (!response.ok) {
+                    // If not OK, throw an error with the status text
+                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
+                }
+
+                // Parse the JSON response from the backend
+                const data = await response.json();
+
+                // Display the fetched time in a more readable format
+                if (data.current_time) {
+                    const serverTime = new Date(data.current_time);
+                    timeResultDiv.textContent = `Server Time: ${serverTime.toLocaleString()} (${data.timezone || 'Unknown timezone'})`;
+                } else {
+                    timeResultDiv.textContent = 'Could not retrieve time from server.';
+                }
+
+            } catch (error) {
+                // If an error occurs during the fetch or processing
+                console.error('Fetch error:', error);
+                timeResultDiv.textContent = 'Failed to fetch time.';
+                errorMessageDiv.textContent = `Error: ${error.message}. Make sure the Python server is running and accessible.`;
+            }
+        });
+    </script>
+
+</body>
+</html>
